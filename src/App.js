@@ -10,22 +10,42 @@ function App() {
 		// { assignments: ["i", "l", "f"] },
 		// { assignments: ["i", "f"] },
 
-		// { assignments: ["b", "i", "b", "f", "f", "f"] },
+		// { assignments: ["b", "i", "b", "f", "f", "fr"] },
 		// { assignments: ["i", "l", "l", "l", "f", "r"] },
 		// { assignments: ["i", "i", "i", "l", "f", "r"] },
 		// { assignments: ["b", "i", "b", "b", "b", "f"] },
+
+		// { assignments: ["b", "i", "b", "lf", "f", "fr"] },
+		// { assignments: ["i", "l", "l", "l", "f", "r"] },
+		// { assignments: ["i", "i", "i", "b", "lfr", "b"] },
+		// { assignments: ["b", "i", "b", "b", "b", "lfr"] },
+
+		// { assignments: ["b", "i", "l", "l", "f", "f", "r", "b", "b", "b"] },
+		// { assignments: ["i", "i", "i", "l", "l", "f", "f", "f", "r"] },
+		// { assignments: ["b", "b", "b", "b", "i", "i", "l", "l", "f", "r"] },
+		// { assignments: ["b", "i", "i", "i", "b", "l", "f", "f", "fr"] },
 
 		{ assignments: ["b", "i", "l", "l", "f", "f", "r"] },
 		{ assignments: ["i", "i", "i", "l", "l", "f", "f", "f", "r"] },
 		{ assignments: ["b", "i", "i", "l", "l", "f", "r"] },
 		{ assignments: ["b", "i", "i", "i", "b", "l", "f", "f", "fr"] },
 	];
+	/*
+
+	Phases
+	VT, VTS/VST, VS, HT, HTS/HST, HS
+	2, 0, HT, HTS/HST, HS
+
+	*/
 
 	// App States
 	const [width, height] = useWindowSize();
-	const [secPerStep, setSecPerStep] = useState(1);
+	const initialStepsPerSec = 30;
+	const [stepsPerSec, setStepsPerSec] = useState(initialStepsPerSec);
 	const currentStep = useRef(0);
+	const signalState = useRef({});
 	const lanes = useRef({});
+	const cars = useRef([]);
 
 	// Canvas States
 	const canvasRef = useRef(null);
@@ -40,22 +60,20 @@ function App() {
 
 			return [...acc, ...myOutLanes];
 		}, []);
-		// console.log(outLanes);
 
 		lanes.current = outLanes.reduce((acc, lane) => {
 			acc[lane] = { go: false };
 			return acc;
 		}, {});
-		// console.log(lanes.current);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// Loop effect
 	useEffect(() => {
 		const loop = setInterval(() => {
-			step(currentStep.current, streets, canvasRef.current);
+			step(currentStep.current, streets, lanes.current, cars, signalState.current, canvasRef.current);
 			currentStep.current++;
-		}, secPerStep * 1000);
-		// clearInterval(loop); // Turn off loop cause I'm working on other stuff
+		}, (1 / stepsPerSec) * 1000);
 		return () => clearInterval(loop);
 	});
 
@@ -69,16 +87,18 @@ function App() {
 			/>
 			<div className="sidePanel">
 				<h1>Options</h1>
-				<h3 style={{ marginTop: 10 }}>Sec per step</h3>
-				<input
-					type="range"
-					onInput={(e) => setSecPerStep(e.target.value)}
-					defaultValue={1}
-					min={0.02}
-					max={2}
-					step={0.01}
-				/>
-				{secPerStep}
+				<h3 style={{ marginTop: 10 }}>Steps per sec</h3>
+				<div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+					<input
+						type="range"
+						onInput={(e) => setStepsPerSec(e.target.value)}
+						defaultValue={initialStepsPerSec}
+						min={1}
+						max={60}
+						step={1}
+					/>
+					<p>{stepsPerSec}</p>
+				</div>
 			</div>
 		</div>
 	);
