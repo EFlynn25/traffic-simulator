@@ -11,7 +11,7 @@ export const simToScreen = (x, y) => {
 export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 	console.log("Rendering...");
 	const context = canvas.getContext("2d");
-	// const markingWidth = pixelsPerSimUnit / 7.5;
+	const markingWidth = pixelsPerSimUnit / 7.5;
 
 	// Scale canvas for clarity
 	context.scale(window.devicePixelRatio, window.devicePixelRatio);
@@ -46,16 +46,21 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 
 	context.fillStyle = "white";
 	context.beginPath();
-	context.rect(topLeftAnchor[0], topLeftAnchor[1] - 4, intersectionWidth * pixelsPerSimUnit, 4);
+	context.rect(topLeftAnchor[0], topLeftAnchor[1] - markingWidth, intersectionWidth * pixelsPerSimUnit, markingWidth);
 	context.fill();
 	context.beginPath();
-	context.rect(topRightAnchor[0], topRightAnchor[1], 4, intersectionHeight * pixelsPerSimUnit);
+	context.rect(topRightAnchor[0], topRightAnchor[1], markingWidth, intersectionHeight * pixelsPerSimUnit);
 	context.fill();
 	context.beginPath();
-	context.rect(bottomLeftAnchor[0], bottomLeftAnchor[1], intersectionWidth * pixelsPerSimUnit, 4);
+	context.rect(bottomLeftAnchor[0], bottomLeftAnchor[1], intersectionWidth * pixelsPerSimUnit, markingWidth);
 	context.fill();
 	context.beginPath();
-	context.rect(topLeftAnchor[0] - 4, topLeftAnchor[1], 4, intersectionHeight * pixelsPerSimUnit);
+	context.rect(
+		topLeftAnchor[0] - markingWidth,
+		topLeftAnchor[1],
+		markingWidth,
+		intersectionHeight * pixelsPerSimUnit
+	);
 	context.fill();
 
 	// Draw markings
@@ -66,12 +71,12 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 			originX: intersectionWidth / 2,
 			originY: -intersectionHeight / 2,
 			dotted: {
-				xComp: -2,
+				xComp: -markingWidth / 2,
 				yComp: -pixelsPerSimUnit,
 			},
 			solid: {
 				xComp: 0,
-				yComp: pixelsPerSimUnit - 4 - window.innerHeight / 2,
+				yComp: pixelsPerSimUnit - markingWidth - window.innerHeight / 2,
 			},
 			turn: {
 				xComp: 0,
@@ -79,7 +84,7 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 			},
 			barrier: {
 				xComp: -pixelsPerSimUnit,
-				yComp: -4 - window.innerHeight / 2,
+				yComp: -markingWidth - window.innerHeight / 2,
 			},
 		},
 		// Street 1
@@ -88,19 +93,19 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 			originX: intersectionWidth / 2,
 			originY: intersectionHeight / 2,
 			dotted: {
-				xComp: 15,
-				yComp: -2,
+				xComp: pixelsPerSimUnit / 2,
+				yComp: -markingWidth / 2,
 			},
 			solid: {
-				xComp: -11,
+				xComp: markingWidth - pixelsPerSimUnit / 2,
 				yComp: 0,
 			},
 			turn: {
-				xComp: -11,
+				xComp: markingWidth - pixelsPerSimUnit / 2,
 				yComp: 0,
 			},
 			barrier: {
-				xComp: 4,
+				xComp: markingWidth,
 				yComp: -pixelsPerSimUnit,
 			},
 		},
@@ -110,20 +115,20 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 			originX: -intersectionWidth / 2,
 			originY: intersectionHeight / 2,
 			dotted: {
-				xComp: -2,
-				yComp: 15,
+				xComp: -markingWidth / 2,
+				yComp: pixelsPerSimUnit / 2,
 			},
 			solid: {
 				xComp: 0,
-				yComp: -11,
+				yComp: markingWidth - pixelsPerSimUnit / 2,
 			},
 			turn: {
 				xComp: 0,
-				yComp: -11,
+				yComp: markingWidth - pixelsPerSimUnit / 2,
 			},
 			barrier: {
 				xComp: 0,
-				yComp: 4,
+				yComp: markingWidth,
 			},
 		},
 		// Street 3
@@ -133,10 +138,10 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 			originY: -intersectionHeight / 2,
 			dotted: {
 				xComp: -pixelsPerSimUnit,
-				yComp: -2,
+				yComp: -markingWidth / 2,
 			},
 			solid: {
-				xComp: pixelsPerSimUnit - 4 - window.innerWidth / 2,
+				xComp: pixelsPerSimUnit - markingWidth - window.innerWidth / 2,
 				yComp: 0,
 			},
 			turn: {
@@ -144,7 +149,7 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 				yComp: 0,
 			},
 			barrier: {
-				xComp: -4 - window.innerWidth / 2,
+				xComp: -markingWidth - window.innerWidth / 2,
 				yComp: 0,
 			},
 		},
@@ -190,8 +195,8 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 				context.rect(
 					coords[0] + calc.dotted.xComp + calc.solid.xComp,
 					coords[1] + calc.dotted.yComp + calc.solid.yComp,
-					calc.vertical ? 4 : window.innerWidth / 2,
-					calc.vertical ? window.innerHeight / 2 : 4
+					calc.vertical ? markingWidth : window.innerWidth / 2,
+					calc.vertical ? window.innerHeight / 2 : markingWidth
 				);
 				context.fill();
 			} else {
@@ -210,8 +215,8 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 					context.rect(
 						coords[0] + calc.dotted.xComp,
 						coords[1] + calc.dotted.yComp,
-						calc.vertical ? 4 : pixelsPerSimUnit / 2,
-						calc.vertical ? pixelsPerSimUnit / 2 : 4
+						calc.vertical ? markingWidth : pixelsPerSimUnit / 2,
+						calc.vertical ? pixelsPerSimUnit / 2 : markingWidth
 					);
 					context.fill();
 				}
@@ -228,8 +233,8 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 					context.rect(
 						coords[0] + calc.dotted.xComp + calc.turn.xComp,
 						coords[1] + calc.dotted.yComp + calc.turn.yComp,
-						calc.vertical ? 4 : 4 * pixelsPerSimUnit - 4,
-						calc.vertical ? 4 * pixelsPerSimUnit - 4 : 4
+						calc.vertical ? markingWidth : 4 * pixelsPerSimUnit - markingWidth,
+						calc.vertical ? 4 * pixelsPerSimUnit - markingWidth : markingWidth
 					);
 					context.fill();
 				}
@@ -253,10 +258,10 @@ export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 		);
 		context.beginPath();
 		context.rect(
-			coords[0] + (streetIndex === 3 ? -4 : 0),
-			coords[1] + (streetIndex === 0 ? -4 : 0),
-			vertical ? pixelsPerSimUnit : 4,
-			vertical ? 4 : pixelsPerSimUnit
+			coords[0] + (streetIndex === 3 ? -markingWidth : 0),
+			coords[1] + (streetIndex === 0 ? -markingWidth : 0),
+			vertical ? pixelsPerSimUnit : markingWidth,
+			vertical ? markingWidth : pixelsPerSimUnit
 		);
 		context.fill();
 	});
