@@ -33,7 +33,7 @@ export const arcCalculations = (towardArcDelta, acrossArcDelta) => ({
 		(towardArcDelta > acrossArcDelta
 			? (towardArcDelta - acrossArcDelta) * (pixelsPerSimUnit / pixelsPerPathStep)
 			: 0),
-	stepsPerArc: Math.min(acrossArcDelta, towardArcDelta) * (50 / pixelsPerPathStep),
+	stepsPerArc: Math.min(acrossArcDelta, towardArcDelta) * (50 / pixelsPerPathStep) * (pixelsPerSimUnit / 30),
 });
 
 export function getFinalLane(streets, initialLane) {

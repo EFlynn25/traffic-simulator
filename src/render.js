@@ -8,9 +8,10 @@ export const simToScreen = (x, y) => {
 	return [centerX + x * pixelsPerSimUnit, centerY + y * pixelsPerSimUnit];
 };
 
-export function render(canvas, streets, lanes, cars) {
+export function render(currentStep, streets, lanes, cars, canvas, showStats) {
 	console.log("Rendering...");
 	const context = canvas.getContext("2d");
+	// const markingWidth = pixelsPerSimUnit / 7.5;
 
 	// Scale canvas for clarity
 	context.scale(window.devicePixelRatio, window.devicePixelRatio);
@@ -19,13 +20,22 @@ export function render(canvas, streets, lanes, cars) {
 	context.beginPath();
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
+	// Draw title and stats
+	context.fillStyle = "white";
+	context.font = "bold 16px Montserrat";
+	context.textBaseline = "top";
+	context.fillText("Flynn Traffic Simulator", 10, 10);
+	if (showStats) {
+		context.fillText("Step: " + currentStep.toString(), 10, 30);
+		context.fillText("Cars: " + cars.length.toString(), 10, 50);
+	}
+
 	// Draw streets
 	const intersectionWidth = Math.max(streets[0].assignments.length, streets[2].assignments.length);
 	const intersectionHeight = Math.max(streets[1].assignments.length, streets[3].assignments.length);
 	const topLeftAnchor = simToScreen(-intersectionWidth / 2, -intersectionHeight / 2);
 	const topRightAnchor = simToScreen(intersectionWidth / 2, -intersectionHeight / 2);
 	const bottomLeftAnchor = simToScreen(-intersectionWidth / 2, intersectionHeight / 2);
-	// const bottomRightAnchor = simToScreen(intersectionWidth / 2, intersectionHeight / 2);
 	context.fillStyle = "hsl(220deg 5% 12%)";
 	context.beginPath();
 	context.rect(0, topLeftAnchor[1], window.innerWidth, intersectionHeight * pixelsPerSimUnit);
@@ -57,18 +67,18 @@ export function render(canvas, streets, lanes, cars) {
 			originY: -intersectionHeight / 2,
 			dotted: {
 				xComp: -2,
-				yComp: -30,
+				yComp: -pixelsPerSimUnit,
 			},
 			solid: {
 				xComp: 0,
-				yComp: 26 - window.innerHeight / 2,
+				yComp: pixelsPerSimUnit - 4 - window.innerHeight / 2,
 			},
 			turn: {
 				xComp: 0,
-				yComp: -90,
+				yComp: -pixelsPerSimUnit * 3,
 			},
 			barrier: {
-				xComp: -30,
+				xComp: -pixelsPerSimUnit,
 				yComp: -4 - window.innerHeight / 2,
 			},
 		},
@@ -91,7 +101,7 @@ export function render(canvas, streets, lanes, cars) {
 			},
 			barrier: {
 				xComp: 4,
-				yComp: -30,
+				yComp: -pixelsPerSimUnit,
 			},
 		},
 		// Street 2
@@ -122,15 +132,15 @@ export function render(canvas, streets, lanes, cars) {
 			originX: -intersectionWidth / 2,
 			originY: -intersectionHeight / 2,
 			dotted: {
-				xComp: -30,
+				xComp: -pixelsPerSimUnit,
 				yComp: -2,
 			},
 			solid: {
-				xComp: 26 - window.innerWidth / 2,
+				xComp: pixelsPerSimUnit - 4 - window.innerWidth / 2,
 				yComp: 0,
 			},
 			turn: {
-				xComp: -90,
+				xComp: -pixelsPerSimUnit * 3,
 				yComp: 0,
 			},
 			barrier: {
@@ -155,8 +165,8 @@ export function render(canvas, streets, lanes, cars) {
 				context.rect(
 					coords[0] + calc.barrier.xComp,
 					coords[1] + calc.barrier.yComp,
-					calc.vertical ? 30 : window.innerWidth / 2,
-					calc.vertical ? window.innerHeight / 2 : 30
+					calc.vertical ? pixelsPerSimUnit : window.innerWidth / 2,
+					calc.vertical ? window.innerHeight / 2 : pixelsPerSimUnit
 				);
 				context.fill();
 			}
@@ -200,11 +210,12 @@ export function render(canvas, streets, lanes, cars) {
 					context.rect(
 						coords[0] + calc.dotted.xComp,
 						coords[1] + calc.dotted.yComp,
-						calc.vertical ? 4 : 15,
-						calc.vertical ? 15 : 4
+						calc.vertical ? 4 : pixelsPerSimUnit / 2,
+						calc.vertical ? pixelsPerSimUnit / 2 : 4
 					);
 					context.fill();
 				}
+				// Turn line
 				if (
 					(prevAssignment !== "i" && prevAssignment !== "b" && !prevAssignment.includes("f")) ||
 					(currAssignment !== "i" && currAssignment !== "b" && !currAssignment.includes("f"))
@@ -217,8 +228,8 @@ export function render(canvas, streets, lanes, cars) {
 					context.rect(
 						coords[0] + calc.dotted.xComp + calc.turn.xComp,
 						coords[1] + calc.dotted.yComp + calc.turn.yComp,
-						calc.vertical ? 4 : 116,
-						calc.vertical ? 116 : 4
+						calc.vertical ? 4 : 4 * pixelsPerSimUnit - 4,
+						calc.vertical ? 4 * pixelsPerSimUnit - 4 : 4
 					);
 					context.fill();
 				}
@@ -256,7 +267,7 @@ export function render(canvas, streets, lanes, cars) {
 		const carPos = getCarPos(streets, car);
 		let coords = simToScreen(...carPos);
 		context.beginPath();
-		context.arc(coords[0], coords[1], 5, 0, 2 * Math.PI);
+		context.arc(coords[0], coords[1], pixelsPerSimUnit / 6, 0, 2 * Math.PI);
 		context.fill();
 	});
 
