@@ -128,8 +128,8 @@ export function presetPhaseSignalStep(currentStep, phases, lanes, signalState, s
 		signalState.nextPhase = (signalState.nextPhase + 1) % phases.length;
 
 		// Reset all streets
-		const outLanes = Object.keys(lanes);
-		outLanes.forEach((laneID) => (lanes[laneID].go = false));
+		// const outLanes = Object.keys(lanes);
+		Object.keys(lanes).forEach((laneID) => (lanes[laneID].go = false));
 	}
 	if (currentStep % cycleDuration === 0) {
 		console.log("Set new street");
@@ -141,5 +141,136 @@ export function presetPhaseSignalStep(currentStep, phases, lanes, signalState, s
 				lanes[laneID].go = true;
 			}
 		});
+	}
+}
+
+/*
+signalState:
+	currentPhase: int
+	phaseTimer: int
+	betweenPhaseClearTimer: int
+	detectionStates: int[]
+	betweenDetectionClearTimers: int[]
+	lanes:
+		[laneID]:
+			detectionTimer: int
+*/
+const maxLaneTime = 150;
+const minLaneTime = 40;
+export function simpleDetectionSignalStep(currentStep, phases, lanes, cars, signalState, stepsPerArc) {
+	if (Object.keys(signalState).length === 0) {
+		console.log("Initializing signalState...");
+		signalState.currentPhase = -1;
+		signalState.phaseTimer = 0;
+		signalState.phaseTimeElapsed = 0;
+		signalState.betweenPhaseClearTimer = 0;
+		signalState.detectionStates = [];
+		signalState.betweenDetectionClearTimers = [];
+		signalState.lanes = Object.keys(lanes).reduce((acc, lane) => {
+			acc[lane] = { detectionTimer: 0 };
+			return acc;
+		}, {});
+		console.log(JSON.parse(JSON.stringify(signalState)));
+	}
+
+	if (signalState.phaseTimer > 0) {
+		// -- STEP PHASE --
+		console.log("Stepping current phase...");
+		signalState.phaseTimer--;
+		signalState.phaseTimeElapsed++;
+
+		// Decrement detection timers
+		Object.keys(lanes).forEach((laneID) => {
+			if (signalState.lanes[laneID].detectionTimer > 0) signalState.lanes[laneID].detectionTimer--;
+		});
+
+		// Detect lanes
+		cars.forEach((car) => {
+			if (car.pathStep >= -30 && car.pathStep <= 0) {
+				if (Object.keys(lanes).some((laneID) => laneID === car.initialLane && lanes[laneID].go))
+					console.log("Detected", car.initialLane);
+				signalState.lanes[car.initialLane].detectionTimer = minLaneTime;
+			}
+		});
+
+		// Prepare lane switches
+		phases[signalState.currentPhase].forEach((detectionSequence, index) => {
+			const myDetectionState = signalState.detectionStates[index];
+			const elapsedTimeCap = (myDetectionState + 1) * maxLaneTime + myDetectionState * stepsPerArc;
+			console.log(index, myDetectionState, elapsedTimeCap);
+			if (signalState.phaseTimeElapsed === elapsedTimeCap) console.log("Max time reached for detection lane");
+			if (
+				myDetectionState < detectionSequence.length - 1 &&
+				signalState.betweenDetectionClearTimers[index] === -1 &&
+				(detectionSequence[myDetectionState].every(
+					(laneID) => signalState.lanes[laneID].detectionTimer === 0
+				) ||
+					signalState.phaseTimeElapsed === elapsedTimeCap)
+			) {
+				// ** Detection time limit reached **
+				console.log("Preparing lanes switches due to detection...");
+
+				// Turn off current lights
+				detectionSequence[signalState.detectionStates[index]].forEach((laneID) => (lanes[laneID].go = false));
+
+				// Set clear timer
+				signalState.betweenDetectionClearTimers[index] = stepsPerArc;
+			}
+		});
+
+		// Check between detection clear timers
+		signalState.betweenDetectionClearTimers.forEach((clearTimer, index) => {
+			if (clearTimer === 0) {
+				// Increment detection state
+				signalState.detectionStates[index]++;
+
+				// Turn on new lights
+				phases[signalState.currentPhase][index][signalState.detectionStates[index]].forEach((laneID) => {
+					lanes[laneID].go = true;
+					signalState.lanes[laneID].detectionTimer = minLaneTime;
+				});
+			}
+
+			if (clearTimer >= 0) {
+				signalState.betweenDetectionClearTimers[index]--;
+			}
+		});
+		console.log(signalState.betweenDetectionClearTimers);
+
+		console.log(JSON.parse(JSON.stringify(signalState)));
+	} else if (signalState.betweenPhaseClearTimer > 0) {
+		// -- CLEAR INTERSECTION --
+		console.log("Waiting for intersection to clear...");
+
+		// Reset all lanes
+		if (signalState.betweenPhaseClearTimer === stepsPerArc)
+			Object.keys(lanes).forEach((laneID) => (lanes[laneID].go = false));
+
+		// Decrement clear timer
+		signalState.betweenPhaseClearTimer--;
+	} else {
+		// -- NEXT PHASE --
+		console.log("Setting next phase...");
+
+		// Reset all lanes
+		Object.keys(lanes).forEach((laneID) => (lanes[laneID].go = false));
+
+		// Set next phase
+		const nextPhase = (signalState.currentPhase + 1) % phases.length;
+		const longestDetectionSequenceLength = Math.max(...phases[nextPhase].map((detectList) => detectList.length));
+		signalState.currentPhase = nextPhase;
+		signalState.phaseTimer = longestDetectionSequenceLength * (maxLaneTime + stepsPerArc);
+		signalState.phaseTimeElapsed = 0;
+		signalState.betweenPhaseClearTimer = stepsPerArc;
+		signalState.detectionStates = phases[nextPhase].map(() => 0);
+		signalState.betweenDetectionClearTimers = phases[nextPhase].map(() => -1);
+		phases[nextPhase].forEach((detectionSequence) => {
+			detectionSequence[0].forEach((laneID) => {
+				lanes[laneID].go = true;
+				signalState.lanes[laneID].detectionTimer = minLaneTime;
+			});
+		});
+
+		console.log(JSON.parse(JSON.stringify(signalState)));
 	}
 }

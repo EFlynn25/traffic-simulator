@@ -55,6 +55,8 @@ function App() {
 
 	*/
 
+	// const phases2 = [["23", "24", "25", "26"], ["02", "03", "04", "05", "06"], []];
+
 	// App States
 	const [width, height] = useWindowSize();
 	const initialStepsPerSec = 30;

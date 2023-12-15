@@ -1,5 +1,41 @@
-import { arcCalculations, getFinalLane, pixelsPerPathStep, presetPhaseSignalStep, sortCarsByStep } from "./functions";
+import {
+	arcCalculations,
+	getFinalLane,
+	pixelsPerPathStep,
+	presetPhaseSignalStep,
+	simpleDetectionSignalStep,
+	sortCarsByStep,
+} from "./functions";
 import { pixelsPerSimUnit, render } from "./render";
+
+const phases1 = [
+	[
+		// Phase 1
+		[
+			// Detection Sequence 1
+			["02", "03"], // DGroup 1
+			["25", "26"], // DGroup 2
+		],
+		[
+			// Detection Sequence 2
+			["23", "24"], // DGroup 1
+			["04", "05", "06"], // DGroup 2
+		],
+	],
+	[
+		// Phase 2
+		[
+			// Detection Sequence 1
+			["13", "14"], // DGroup 1
+			["36", "37", "38"], // DGroup 2
+		],
+		[
+			// Detection Sequence 2
+			["35"], // DGroup 1
+			["15", "16", "17", "18"], // DGroup 2
+		],
+	],
+];
 
 export function step(currentStep, streets, lanes, carsRef, signalState, canvas, showStats) {
 	console.log("Stepping...", currentStep);
@@ -25,6 +61,7 @@ export function step(currentStep, streets, lanes, carsRef, signalState, canvas, 
 		)
 	);
 	presetPhaseSignalStep(currentStep, eachStreetPhases, lanes, signalState, longestArcCalc.stepsPerArc);
+	// simpleDetectionSignalStep(currentStep, phases1, lanes, carsRef.current, signalState, longestArcCalc.stepsPerArc);
 
 	// Remove old cars
 	const longestStreetInPathSteps = Math.ceil(
