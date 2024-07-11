@@ -120,18 +120,34 @@ function App() {
 				{sliderOption("Steps Per Sec", stepsPerSec, 1, 60, 1, initialStepsPerSec, (e) =>
 					setStepsPerSec(e.target.value)
 				)}
-				{sliderOption("Vertical Street Busy Factor", streets[0].busyFactor, 0, 1, 0.05, 0.25, (e) => {
-					const streetsCopy = JSON.parse(JSON.stringify(streets));
-					streetsCopy[0].busyFactor = e.target.value;
-					streetsCopy[2].busyFactor = e.target.value;
-					setStreets(streetsCopy);
-				})}
-				{sliderOption("Horizontal Street Busy Factor", streets[1].busyFactor, 0, 1, 0.05, 0.5, (e) => {
-					const streetsCopy = JSON.parse(JSON.stringify(streets));
-					streetsCopy[1].busyFactor = e.target.value;
-					streetsCopy[3].busyFactor = e.target.value;
-					setStreets(streetsCopy);
-				})}
+				{sliderOption(
+					"Vertical Street Busy Factor",
+					streets[0].busyFactor,
+					0,
+					1,
+					0.05,
+					streets[0].busyFactor,
+					(e) => {
+						const streetsCopy = JSON.parse(JSON.stringify(streets));
+						streetsCopy[0].busyFactor = e.target.value;
+						streetsCopy[2].busyFactor = e.target.value;
+						setStreets(streetsCopy);
+					}
+				)}
+				{sliderOption(
+					"Horizontal Street Busy Factor",
+					streets[1].busyFactor,
+					0,
+					1,
+					0.05,
+					streets[1].busyFactor,
+					(e) => {
+						const streetsCopy = JSON.parse(JSON.stringify(streets));
+						streetsCopy[1].busyFactor = e.target.value;
+						streetsCopy[3].busyFactor = e.target.value;
+						setStreets(streetsCopy);
+					}
+				)}
 				<div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 5 }}>
 					<h3>Show stats</h3>
 					<input type="checkbox" onChange={(e) => setShowStats(e.target.checked)} checked={showStats} />

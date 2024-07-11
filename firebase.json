@@ -1,0 +1,6 @@
+{
+	"hosting": {
+	  "site": "flynn-traffic-sim",
+	  "public": "build"
+	}
+  }
