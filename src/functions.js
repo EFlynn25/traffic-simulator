@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect } from "react";
-import { pixelsPerSimUnit } from "./render";
+import { pixelsPerSimUnitOld } from "./render.ts";
 
 // Hooks
 
@@ -31,9 +31,9 @@ export const arcCalculations = (towardArcDelta, acrossArcDelta) => ({
 	stepToStartArc:
 		1 +
 		(towardArcDelta > acrossArcDelta
-			? (towardArcDelta - acrossArcDelta) * (pixelsPerSimUnit / pixelsPerPathStep)
+			? (towardArcDelta - acrossArcDelta) * (pixelsPerSimUnitOld / pixelsPerPathStep)
 			: 0),
-	stepsPerArc: Math.min(acrossArcDelta, towardArcDelta) * (50 / pixelsPerPathStep) * (pixelsPerSimUnit / 30),
+	stepsPerArc: Math.min(acrossArcDelta, towardArcDelta) * (50 / pixelsPerPathStep) * (pixelsPerSimUnitOld / 30),
 });
 
 export function getFinalLane(streets, initialLane) {
@@ -84,7 +84,7 @@ export function getCarPos(streets, car) {
 		(initialStreet.assignments.length % 2 === 0 ? 0.5 : 0);
 
 	if (direction === "f") {
-		toward += car.pathStep * (pixelsPerPathStep / pixelsPerSimUnit);
+		toward += car.pathStep * (pixelsPerPathStep / pixelsPerSimUnitOld);
 	} else if (direction === "l" || direction === "r") {
 		const acrossArcDelta =
 			direction === "l" ? initialLaneIndex + 1 : initialStreet.assignments.length - initialLaneIndex;
@@ -94,19 +94,19 @@ export function getCarPos(streets, car) {
 		const stepToStartArc = arcCalc.stepToStartArc;
 		const stepsPerArc = arcCalc.stepsPerArc;
 		if (car.pathStep < stepToStartArc) {
-			toward += car.pathStep * (pixelsPerPathStep / pixelsPerSimUnit);
+			toward += car.pathStep * (pixelsPerPathStep / pixelsPerSimUnitOld);
 		} else if (car.pathStep <= stepToStartArc + stepsPerArc) {
 			toward +=
-				stepToStartArc * (pixelsPerPathStep / pixelsPerSimUnit) +
+				stepToStartArc * (pixelsPerPathStep / pixelsPerSimUnitOld) +
 				arcRadius * Math.sin(((car.pathStep - stepToStartArc) / stepsPerArc) * (Math.PI / 2));
 			across +=
 				(direction === "l" ? 1 : -1) *
 				(arcRadius * Math.cos(((car.pathStep - stepToStartArc) / stepsPerArc) * (Math.PI / 2)) - arcRadius);
 		} else {
-			toward += stepToStartArc * (pixelsPerPathStep / pixelsPerSimUnit) + arcRadius;
+			toward += stepToStartArc * (pixelsPerPathStep / pixelsPerSimUnitOld) + arcRadius;
 			across +=
 				(direction === "l" ? -1 : 1) *
-				(arcRadius + (car.pathStep - stepToStartArc - stepsPerArc) * (pixelsPerPathStep / pixelsPerSimUnit));
+				(arcRadius + (car.pathStep - stepToStartArc - stepsPerArc) * (pixelsPerPathStep / pixelsPerSimUnitOld));
 		}
 	}
 

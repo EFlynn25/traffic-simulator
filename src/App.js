@@ -2,15 +2,38 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { step } from './step'
 import { useWindowSize } from './functions'
-import { testin, Chalk } from './chalk/index.ts'
+import { Chalk } from './chalk/index.ts'
+import { render } from './render.ts'
 
 function App() {
-  const chalk = useRef(new Chalk())
-  for (let i = 0; i < 100; i++) {
-    chalk.current.step()
-  }
-  return null
+  const [width, height] = useWindowSize()
+  const canvasRef = useRef(null)
+  const stepsPerSec = 60
+  const distancePerSec = 15
+  const chalk = useRef(new Chalk(distancePerSec / stepsPerSec))
 
+  // ------ Effects
+  useEffect(() => {
+    const loop = setInterval(() => {
+      chalk.current.step()
+      render(canvasRef.current, chalk.current)
+    }, 1000 / stepsPerSec)
+    return () => clearInterval(loop)
+  })
+
+  // ------ Render
+  return (
+    <div className='App'>
+      <canvas
+        ref={canvasRef}
+        style={{ backgroundColor: '#555' }}
+        width={Math.floor((width - 300) * window.devicePixelRatio)}
+        height={Math.floor(height * window.devicePixelRatio)}
+      />
+    </div>
+  )
+
+  /*
   const [streets, setStreets] = useState([
     // Original
     { assignments: ['b', 'i', 'l', 'l', 'f', 'f', 'r'], busyFactor: 0.25 },
@@ -54,13 +77,10 @@ function App() {
     // { assignments: ["i", "b", "f", "r"], busyFactor: 0.25 },
     // { assignments: ["lf", "f", "fr"], busyFactor: 0.5 },
   ])
-  /*
 
-	Phases
-	VT, VTS/VST, VS, HT, HTS/HST, HS
-	2, 0, HT, HTS/HST, HS
-
-	*/
+  // Phases
+  // VT, VTS/VST, VS, HT, HTS/HST, HS
+  // 2, 0, HT, HTS/HST, HS
 
   // const phases2 = [["23", "24", "25", "26"], ["02", "03", "04", "05", "06"], []];
 
@@ -154,6 +174,7 @@ function App() {
       </div>
     </div>
   )
+  */
 }
 
 export default App

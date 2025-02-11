@@ -6,7 +6,7 @@ import {
 	simpleDetectionSignalStep,
 	sortCarsByStep,
 } from "./functions";
-import { pixelsPerSimUnit, render } from "./render";
+import { pixelsPerSimUnitOld, renderOld } from "./render.ts";
 
 const phases1 = [
 	[
@@ -66,8 +66,8 @@ export function step(currentStep, streets, lanes, carsRef, signalState, canvas, 
 	// Remove old cars
 	const longestStreetInPathSteps = Math.ceil(
 		Math.max(
-			window.innerWidth - 300 - streets[0].assignments.length * pixelsPerSimUnit,
-			window.innerHeight - streets[1].assignments.length * pixelsPerSimUnit
+			window.innerWidth - 300 - streets[0].assignments.length * pixelsPerSimUnitOld,
+			window.innerHeight - streets[1].assignments.length * pixelsPerSimUnitOld
 		) /
 			2 /
 			pixelsPerPathStep
@@ -87,7 +87,7 @@ export function step(currentStep, streets, lanes, carsRef, signalState, canvas, 
 				.every(
 					(otherCar) =>
 						car.initialLane !== otherCar.initialLane ||
-						otherCar.pathStep - car.pathStep > 4 * (pixelsPerSimUnit / 30)
+						otherCar.pathStep - car.pathStep > 4 * (pixelsPerSimUnitOld / 30)
 				)
 		)
 			car.pathStep++;
@@ -110,5 +110,5 @@ export function step(currentStep, streets, lanes, carsRef, signalState, canvas, 
 	}
 
 	// Render canvas
-	if (canvas) render(currentStep, streets, lanes, carsRef.current, canvas, showStats);
+	if (canvas) renderOld(currentStep, streets, lanes, carsRef.current, canvas, showStats);
 }

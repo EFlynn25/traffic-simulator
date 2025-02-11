@@ -1,0 +1,124 @@
+const otherEntities = entities.filter((entity) => entity !== this)
+let closestCollidingDistance: number | undefined
+let closestCollidingNextDistance: number | undefined
+let closestCollidingEntity: Entity | undefined
+for (let i = 0; i < otherEntities.length; i++) {
+	const entity = otherEntities[i]
+	const entityScreenPosition = entity.getScreenPosition()
+	const distance = calculateDistanceBetweenPoints(entityScreenPosition, this.getScreenPosition())
+	const nextDistance = calculateDistanceBetweenPoints(
+	entityScreenPosition,
+	this.getScreenPosition(newPathPosition, newPathIndex)
+	)
+
+	if (nextDistance < this.distanceBetweenEntities || distance < this.distanceBetweenEntities) {
+	if (!closestCollidingNextDistance || nextDistance < closestCollidingNextDistance) closestCollidingEntity = entity
+	}
+	closestCollidingDistance =
+	closestCollidingDistance !== undefined ? Math.min(closestCollidingDistance, distance) : distance
+	closestCollidingNextDistance =
+	closestCollidingNextDistance !== undefined ? Math.min(closestCollidingNextDistance, nextDistance) : nextDistance
+	console.log(distance, closestCollidingDistance)
+}
+if (closestCollidingEntity) {
+	// Check if entities are on the same path and we are moving toward the other entity
+	if (
+	closestCollidingEntity.getPath().id === this.getPath().id &&
+	closestCollidingNextDistance! - closestCollidingDistance! < 0
+	) {
+	const newpp = Math.max(
+		Math.min(closestCollidingEntity.getPathPosition() - this.distanceBetweenEntities, newPathPosition),
+		0
+	)
+	console.log(closestCollidingEntity.getPathPosition(), this.getPathPosition(), newpp)
+	this.pathPosition = newpp
+	}
+	return true
+}
+
+this.pathPosition = newPathPosition
+this.pathIndex = newPathIndex
+return true
+
+// Prevent collisions
+// ! This system needs changed. Check note in Chalk under the collision issue.
+let closestEntityDistance: number | undefined
+let nextClosestEntityDistance: number | undefined
+let willCollide: boolean = false
+entities
+	.filter((entity) => entity !== this)
+	.forEach((entity) => {
+	return
+	const entityNextStep = entity.getNextStep()
+	const next2Step = this.getNextStep(2)
+	if (entityNextStep === false || next2Step === false) return
+	const entityScreenPosition = entityNextStep.trajectory[0]
+
+	const trajectoriesCollide = detectSegmentsCollision(entityNextStep.trajectory, next2Step.trajectory)
+	const trajectoryHitsBubble =
+		calculateDistanceBetweenPoints(nextStep.trajectory[1], entityScreenPosition) <= this.distanceBetweenEntities
+
+	const distance = calculateDistanceBetweenPoints(entityScreenPosition, this.getScreenPosition())
+	const nextDistance = calculateDistanceBetweenPoints(
+		entityScreenPosition,
+		this.getScreenPosition(newPathPosition, newPathIndex)
+	)
+	const movingTowardEntity = nextDistance - distance > 0
+	console.log(distance, nextDistance, nextDistance - distance, movingTowardEntity)
+
+	// Somehow check if moving increases the distance from other entities
+
+	if ((trajectoriesCollide || trajectoryHitsBubble) && !movingTowardEntity) willCollide = true
+	closestEntityDistance =
+		closestEntityDistance !== undefined ? Math.min(closestEntityDistance, distance) : distance
+
+	/*
+	const entityNextStep = entity.getNextStep()
+	if (entityNextStep === false) return
+	// const entityScreenPosition = entity.getScreenPosition()
+	const entityScreenPosition = entityNextStep.trajectory[0]
+	const nextStep = this.getNextStep(newPathPosition + this.distancePerStep)
+	if (nextStep === false) return
+
+	const trajectoriesCollide = detectSegmentsCollision(entityNextStep.trajectory, nextStep.trajectory)
+	const trajectoryHitsBubble =
+		calculateDistanceBetweenPoints(nextStep.trajectory[1], entityScreenPosition) <= this.distanceBetweenEntities
+	console.log(
+		nextStep.trajectory,
+		entityScreenPosition,
+		calculateDistanceBetweenPoints(nextStep.trajectory[1], entityScreenPosition)
+	)
+	if (trajectoriesCollide || trajectoryHitsBubble) willCollide = true
+	return
+
+	const distance = calculateDistanceBetweenPoints(entityScreenPosition, this.getScreenPosition())
+	const nextDistance = calculateDistanceBetweenPoints(
+		entityScreenPosition,
+		this.getScreenPosition(newPathPosition, newPathIndex)
+	)
+	closestEntityDistance =
+		closestEntityDistance !== undefined ? Math.min(closestEntityDistance, distance) : distance
+	nextClosestEntityDistance =
+		nextClosestEntityDistance !== undefined ? Math.min(nextClosestEntityDistance, nextDistance) : nextDistance
+	*/
+	})
+if (willCollide) {
+	const nextStep = this.getNextStep(
+	this.pathPosition + Math.max(closestEntityDistance! - this.distanceBetweenEntities, 0)
+	)
+	if (nextStep === false) return false
+	this.pathPosition = nextStep.pathPosition
+	this.pathIndex = nextStep.pathIndex
+	return true
+}
+/*
+if (nextClosestEntityDistance !== undefined && nextClosestEntityDistance < this.distanceBetweenEntities) {
+	const nextStep = this.getNextStep(
+	this.pathPosition + Math.max(closestEntityDistance! - this.distanceBetweenEntities, 0)
+	)
+	if (nextStep === false) return false
+	this.pathPosition = nextStep.pathPosition
+	this.pathIndex = nextStep.pathIndex
+	return true
+}
+*/
