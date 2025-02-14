@@ -9,7 +9,7 @@ function App() {
   const [width, height] = useWindowSize()
   const canvasRef = useRef(null)
   const stepsPerSec = 60
-  const distancePerSec = 15
+  const distancePerSec = 5
   const chalk = useRef(new Chalk(distancePerSec / stepsPerSec))
 
   // ------ Effects

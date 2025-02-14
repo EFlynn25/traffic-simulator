@@ -7,11 +7,10 @@ export class Entity {
   private distanceBetweenEntities: number
   private pathPosition: number
   private paths: PathGroup
-  private pathIndex: number
+  private pathIndex: number // <- This should probably be pathId
 
   constructor(paths: PathGroup, pathIndex: number, distancePerStep: number, distanceBetweenEntities: number) {
     this.entityId = Math.floor(Math.random() * 1000)
-    console.log(`[${this.entityId}] spawned`)
     this.distancePerStep = distancePerStep
     this.distanceBetweenEntities = distanceBetweenEntities
     this.pathPosition = 0
@@ -54,8 +53,9 @@ export class Entity {
       const locationPathPosition = location.getPathPosition()
       const radius = location.getRadius()
       if (this.pathPosition >= locationPathPosition - radius && this.pathPosition <= locationPathPosition) {
-        const stopAt = location.getState().stopAt
-        if (stopAt && typeof stopAt === 'number') {
+        const go = location.getState(this).go
+        if (!go) {
+          const stopAt = location.getPathPosition()
           closestStop = closestStop ? Math.min(closestStop, stopAt) : stopAt
         }
       }

@@ -1,15 +1,20 @@
-export class Location {
-  // Location should be attached to a path
-  // Maybe paths AND locations should have IDs
+import { Entity } from './entity'
 
+export class Location {
+  private locationId: string
   private pathPosition: number
-	private radius: number
-	private state: Record<string, string | number | null>
-  
-  constructor(pathPosition: number, radius: number) {
+  private radius: number
+  private state: Record<string, any> & { lastRead: number }
+
+  constructor(locationId: string, pathPosition: number, radius: number) {
+    this.locationId = locationId
     this.pathPosition = pathPosition
-    this.state = { stopAt: pathPosition }
+    this.state = { stopAt: pathPosition, go: false, lastRead: Infinity }
     this.radius = radius
+  }
+
+  getLocationId() {
+    return this.locationId
   }
 
   getPathPosition() {
@@ -20,11 +25,16 @@ export class Location {
     return this.radius
   }
 
-  getState() {
+  getState(entity?: Entity) {
+    if (entity) this.state = { ...this.state, lastRead: 0 }
     return this.state
   }
 
   setState(key: string, value: (typeof this.state)[string]) {
     this.state[key] = value
+  }
+
+  step() {
+    this.state = { ...this.state, lastRead: this.state.lastRead + 1 }
   }
 }

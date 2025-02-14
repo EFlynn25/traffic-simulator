@@ -52,17 +52,17 @@ export function render(canvas: HTMLCanvasElement, chalk: Chalk) {
   pathGroups.forEach((group) =>
     group.forEach((path) =>
       path.locations?.forEach((location) => {
-        const stopAt = location.getState().stopAt
-        context.fillStyle = stopAt && typeof stopAt === 'number' ? 'red' : 'green'
-        context.strokeStyle = stopAt && typeof stopAt === 'number' ? '#a00' : '#0a0'
+        const go = location.getState().go
+        context.fillStyle = !go ? 'red' : 'green'
+        context.strokeStyle = !go ? '#a00' : '#0a0'
         const screenPos = simToScreen(convertPathToScreenPosition(location.getPathPosition(), path))
-        // const screenPosRadius = simToScreen(
-        //   convertPathToScreenPosition(location.getPathPosition() - location.getRadius(), path)
-        // )
-        // context.beginPath()
-        // context.moveTo(screenPos.x, screenPos.y)
-        // context.lineTo(screenPosRadius.x, screenPosRadius.y)
-        // context.stroke()
+        const screenPosRadius = simToScreen(
+          convertPathToScreenPosition(location.getPathPosition() - location.getRadius(), path)
+        )
+        context.beginPath()
+        context.moveTo(screenPos.x, screenPos.y)
+        context.lineTo(screenPosRadius.x, screenPosRadius.y)
+        context.stroke()
         context.beginPath()
         context.arc(screenPos.x, screenPos.y, 4, 0, 2 * Math.PI)
         context.fill()
