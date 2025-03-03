@@ -7,6 +7,7 @@ export class Chalk {
   private distanceBetweenEntities: number
   private entities: Entity[]
   private pathGroups: PathGroup[]
+  private spawningPathIds: string[]
   private clock: number
   private queue: string[]
 
@@ -282,6 +283,7 @@ export class Chalk {
         },
       ],
     ]
+    this.spawningPathIds = ['02', '03', '12', '13', '23', '22', '32', '33']
     this.clock = 5 / this.distancePerStep
     this.queue = []
 
@@ -309,7 +311,10 @@ export class Chalk {
     this.entities = this.entities.filter((entity) => entity.step(this.entities))
     if (this.entities.length < 30) {
       const startGroup = Math.floor(Math.random() * 8)
-      this.entities.push(new Entity(this.pathGroups[0], startGroup, this.distancePerStep, this.distanceBetweenEntities))
+      const startGroupId = this.spawningPathIds[Math.floor(Math.random() * this.spawningPathIds.length)]
+      this.entities.push(
+        new Entity(this.pathGroups[0], startGroupId, this.distancePerStep, this.distanceBetweenEntities)
+      )
     }
 
     // Step locations

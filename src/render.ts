@@ -3,7 +3,7 @@ import { Point } from './chalk/types'
 import { convertPathToScreenPosition } from './chalk/utils.ts'
 import { getCarPos } from './functions'
 
-export const pixelsPerSimUnit = 10
+export const pixelsPerSimUnit = 25
 const simToScreen = (point: Point) => {
   const centerX = (window.innerWidth - 300) / 2
   const centerY = window.innerHeight / 2
@@ -26,7 +26,7 @@ export function render(canvas: HTMLCanvasElement, chalk: Chalk) {
   const pathGroups = chalk.getPathGroups()
   const allPathSegments = pathGroups.flatMap((group) => group.flatMap((path) => path.segments))
   context.strokeStyle = 'black'
-  context.lineWidth = 5
+  context.lineWidth = pixelsPerSimUnit / 2
   allPathSegments.forEach((segment) => {
     if (segment.length === 2) {
       // Straight line
@@ -64,7 +64,7 @@ export function render(canvas: HTMLCanvasElement, chalk: Chalk) {
         context.lineTo(screenPosRadius.x, screenPosRadius.y)
         context.stroke()
         context.beginPath()
-        context.arc(screenPos.x, screenPos.y, 4, 0, 2 * Math.PI)
+        context.arc(screenPos.x, screenPos.y, pixelsPerSimUnit / 4, 0, 2 * Math.PI)
         context.fill()
       })
     )
@@ -76,7 +76,7 @@ export function render(canvas: HTMLCanvasElement, chalk: Chalk) {
   entityScreenPositions.forEach((simPos) => {
     const screenPos = simToScreen(simPos)
     context.beginPath()
-    context.arc(screenPos.x, screenPos.y, 4, 0, 2 * Math.PI)
+    context.arc(screenPos.x, screenPos.y, pixelsPerSimUnit / 4, 0, 2 * Math.PI)
     context.fill()
   })
 

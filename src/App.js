@@ -12,6 +12,45 @@ function App() {
   const distancePerSec = 5
   const chalk = useRef(new Chalk(distancePerSec / stepsPerSec))
 
+  const configuration = [
+    {
+      type: 'intersection',
+      id: 'i0', // OR store as { id: 0 } knowing that intersection IDs are preceded with "i"
+      location: { x: 0, y: 0 },
+      east: { assignments: ['...'], length: 10 },
+      north: { assignments: ['...'], length: 10 },
+      west: { assignments: ['...'], length: 10 },
+      south: { assignments: ['...'], length: 10 },
+    },
+    {
+      type: 'road',
+      id: 'r0', // (check note on intersections)
+      start: { location: { x: 0, y: 0 }, assignments: ['...'] },
+      end: { location: { x: 0, y: 0 }, assignments: ['...'] },
+    },
+    { type: 'spawn', roadId: 'r0s' }, // Road 0 start
+    { type: 'spawn', roadId: 'i0w' }, // Intersection 0 west
+  ]
+
+  // i1w - gen
+  // i1n - gen
+  // i1e - gen
+  // i1s - conn i2n
+  // i2w - gen
+  // i2n - conn i1s
+  // i2r - gen
+  // i2s - gen
+
+  // Control intersection lane config
+  // Control each intersection direction length
+  // Connect intersections just by placement
+  // Place roads between intersections
+  //  - FUTURE: Merging?
+  // Spawn point intersections (not sure what I meant by "intersection" here)
+
+  // Assignments read left to right
+  // Extra lanes have input and output assignments, looking from input to output, read left to right
+
   // ------ Effects
   useEffect(() => {
     const loop = setInterval(() => {

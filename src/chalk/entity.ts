@@ -7,27 +7,27 @@ export class Entity {
   private distanceBetweenEntities: number
   private pathPosition: number
   private paths: PathGroup
-  private pathIndex: number // <- This should probably be pathId
+  private pathId: string
 
-  constructor(paths: PathGroup, pathIndex: number, distancePerStep: number, distanceBetweenEntities: number) {
+  constructor(paths: PathGroup, pathId: string, distancePerStep: number, distanceBetweenEntities: number) {
     this.entityId = Math.floor(Math.random() * 1000)
     this.distancePerStep = distancePerStep
     this.distanceBetweenEntities = distanceBetweenEntities
     this.pathPosition = 0
     this.paths = paths
-    this.pathIndex = pathIndex
+    this.pathId = pathId
   }
 
   getPathPosition(): number {
     return this.pathPosition
   }
 
-  getPath(pathIndex?: number): Path {
-    return this.paths[pathIndex ?? this.pathIndex]
+  getPath(pathId?: string): Path {
+    return this.paths.find((path) => path.id === (pathId ?? this.pathId))!
   }
 
-  getScreenPosition(pathPosition?: number, pathIndex?: number): Point {
-    return convertPathToScreenPosition(pathPosition ?? this.pathPosition, this.getPath(pathIndex))
+  getScreenPosition(pathPosition?: number, pathId?: string): Point {
+    return convertPathToScreenPosition(pathPosition ?? this.pathPosition, this.getPath(pathId))
   }
 
   calculateTrajectory(startPoint: Point, endPoint: Point): [Point, Point] {
@@ -42,12 +42,12 @@ export class Entity {
     return [startPoint, newEndPoint]
   }
 
-  getNextStep(incrementBy?: number): { pathIndex: number; pathPosition: number; trajectory: [Point, Point] } | false {
+  getNextStep(incrementBy?: number): { pathId: string; pathPosition: number; trajectory: [Point, Point] } | false {
     let newPathPosition = this.pathPosition + (incrementBy ?? this.distancePerStep)
-    let newPathIndex = this.pathIndex
+    let newPathId = this.pathId
 
     // Read locations
-    const currentPath = this.paths[this.pathIndex]
+    const currentPath = this.getPath()
     let closestStop: number | undefined
     currentPath.locations?.forEach((location) => {
       const locationPathPosition = location.getPathPosition()
@@ -64,44 +64,46 @@ export class Entity {
       if (newPathPosition > closestStop) {
         newPathPosition = closestStop
       }
-      const oldScreenPos = this.getScreenPosition(this.pathPosition, this.pathIndex)
-      const newScreenPos = this.getScreenPosition(newPathPosition, newPathIndex)
+      const oldScreenPos = this.getScreenPosition(this.pathPosition, this.pathId)
+      const newScreenPos = this.getScreenPosition(newPathPosition, newPathId)
       const trajectory = this.calculateTrajectory(oldScreenPos, newScreenPos)
-      return { pathIndex: newPathIndex, pathPosition: newPathPosition, trajectory }
+      return { pathId: newPathId, pathPosition: newPathPosition, trajectory }
     }
 
     // Get new path index, if necessary
     const currentPathLength = getSegmentLengths(this.getPath()).reduce((acc, curr) => acc + curr, 0)
+    const pathIds = this.paths.map((path) => path.id)
     while (newPathPosition > currentPathLength) {
       newPathPosition = newPathPosition - currentPathLength
       // Find all paths in path group that start where the current one ends
-      const currentPathLastPoint = this.getPath(newPathIndex).segments.at(-1)?.at(-1)
-      let possibleNewPathIndexes: number[] = []
-      for (let i = 0; i < this.paths.length; i++) {
-        if (i === newPathIndex) continue
-        const firstPoint = this.paths[i].segments[0][0]
+      const currentPathLastPoint = this.getPath(newPathId).segments.at(-1)?.at(-1)
+      let possibleNewPathIds: string[] = []
+      for (let i = 0; i < pathIds.length; i++) {
+        const id = pathIds[i]
+        if (id === newPathId) continue
+        const firstPoint = this.getPath(id).segments[0][0]
         if (firstPoint.x === currentPathLastPoint?.x && firstPoint.y === currentPathLastPoint?.y) {
-          possibleNewPathIndexes.push(i)
+          possibleNewPathIds.push(id)
         }
       }
       // If no paths are found, return false to unmount
-      if (!possibleNewPathIndexes.length) return false
-      newPathIndex = possibleNewPathIndexes[Math.floor(Math.random() * possibleNewPathIndexes.length)]
+      if (!possibleNewPathIds.length) return false
+      newPathId = possibleNewPathIds[Math.floor(Math.random() * possibleNewPathIds.length)]
     }
 
     // Calculate trajectory
-    const oldScreenPos = this.getScreenPosition(this.pathPosition, this.pathIndex)
-    const newScreenPos = this.getScreenPosition(newPathPosition, newPathIndex)
+    const oldScreenPos = this.getScreenPosition(this.pathPosition, this.pathId)
+    const newScreenPos = this.getScreenPosition(newPathPosition, newPathId)
     const trajectory = this.calculateTrajectory(oldScreenPos, newScreenPos)
 
-    return { pathIndex: newPathIndex, pathPosition: newPathPosition, trajectory }
+    return { pathId: newPathId, pathPosition: newPathPosition, trajectory }
   }
 
   step(entities: Entity[]): boolean {
     const nextStep = this.getNextStep()
     if (nextStep === false) return false
     let newPathPosition = nextStep.pathPosition
-    const newPathIndex = nextStep.pathIndex
+    const newPathId = nextStep.pathId
 
     // Detect same-path collisions
     let closestPathPosition: number | undefined
@@ -130,7 +132,7 @@ export class Entity {
       this.getNextStep(this.distanceBetweenEntities * 2),
     ]
     const myNext2Positions = myNext2Steps.map((step) =>
-      step === false ? false : this.getScreenPosition(step.pathPosition, step.pathIndex)
+      step === false ? false : this.getScreenPosition(step.pathPosition, step.pathId)
     )
     const otherEntities = entities.filter((entity) => entity !== this && entity.getPath().id !== this.getPath().id)
     for (let i = 0; i < otherEntities.length; i++) {
@@ -141,7 +143,7 @@ export class Entity {
         entity.getNextStep(this.distanceBetweenEntities * 2),
       ]
       const entityNext2Positions = entityNext2Steps.map((step) =>
-        step === false ? false : entity.getScreenPosition(step.pathPosition, step.pathIndex)
+        step === false ? false : entity.getScreenPosition(step.pathPosition, step.pathId)
       )
 
       // Calculate the distances between the positions of my next 2 steps and their 2 steps
@@ -184,7 +186,7 @@ export class Entity {
     }
 
     this.pathPosition = newPathPosition
-    this.pathIndex = newPathIndex
+    this.pathId = newPathId
     return true
   }
 }
