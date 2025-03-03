@@ -1,6 +1,6 @@
 import { Chalk } from './chalk'
 import { Point } from './chalk/types'
-import { convertPathToScreenPosition } from './chalk/utils.ts'
+import { convertPathToScreenPosition } from './chalk/utils'
 import { getCarPos } from './functions'
 
 export const pixelsPerSimUnit = 25

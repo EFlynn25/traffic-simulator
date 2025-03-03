@@ -1,4 +1,4 @@
-import { Location } from './location.ts'
+import { Location } from './location'
 export type Point = { x: number; y: number }
 export type Line = [Point, Point]
 export type BezierCurve = [Point, Point, Point]

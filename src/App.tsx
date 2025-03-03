@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { step } from './step'
 import { useWindowSize } from './functions'
-import { Chalk } from './chalk/index.ts'
-import { render } from './render.ts'
+import { Chalk } from './chalk/index'
+import { render } from './render'
 
 function App() {
   const [width, height] = useWindowSize()

@@ -1,6 +1,6 @@
-import { Entity } from './entity.ts'
-import { Location } from './location.ts'
-import { PathGroup } from './types.ts'
+import { Entity } from './entity'
+import { Location } from './location'
+import { PathGroup } from './types'
 
 export class Chalk {
   private distancePerStep: number
@@ -310,7 +310,6 @@ export class Chalk {
     // Step entities
     this.entities = this.entities.filter((entity) => entity.step(this.entities))
     if (this.entities.length < 30) {
-      const startGroup = Math.floor(Math.random() * 8)
       const startGroupId = this.spawningPathIds[Math.floor(Math.random() * this.spawningPathIds.length)]
       this.entities.push(
         new Entity(this.pathGroups[0], startGroupId, this.distancePerStep, this.distanceBetweenEntities)

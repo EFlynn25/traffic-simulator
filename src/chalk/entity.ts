@@ -1,5 +1,5 @@
 import { Path, PathGroup, Point } from './types'
-import { calculateDistanceBetweenPoints, convertPathToScreenPosition, getSegmentLengths } from './utils.ts'
+import { calculateDistanceBetweenPoints, convertPathToScreenPosition, getSegmentLengths } from './utils'
 
 export class Entity {
   private entityId: number

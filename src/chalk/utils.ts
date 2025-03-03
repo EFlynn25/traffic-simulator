@@ -77,5 +77,5 @@ export function detectSegmentsCollision(s1: Line, s2: Line) {
   const B = s1[1]
   const C = s2[0]
   const D = s2[1]
-  return ccw(A, C, D) != ccw(B, C, D) && ccw(A, B, C) != ccw(A, B, D)
+  return ccw(A, C, D) !== ccw(B, C, D) && ccw(A, B, C) !== ccw(A, B, D)
 }
