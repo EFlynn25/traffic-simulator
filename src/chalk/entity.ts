@@ -138,6 +138,9 @@ export class Entity {
     for (let i = 0; i < otherEntities.length; i++) {
       const entity = otherEntities[i]
 
+      // const distance = calculateDistanceBetweenPoints(this.getScreenPosition(), entity.getScreenPosition())
+      // if (distance > 4 * this.distancePerStep + this.distanceBetweenEntities) continue
+
       const entityNext2Steps = [
         entity.getNextStep(this.distanceBetweenEntities),
         entity.getNextStep(this.distanceBetweenEntities * 2),

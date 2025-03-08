@@ -1,52 +1,50 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import './App.css'
-import { step } from './step'
-import { useWindowSize } from './functions'
 import { Chalk } from './chalk/index'
+import { useWindowSize } from './functions'
 import { render } from './render'
+import { Configuration } from './types'
+import { convertConfigToChalk } from './utils'
+
+const configuration: Configuration = {
+  distanceBetweenLanes: 2,
+  objects: [
+    {
+      type: 'intersection',
+      id: 'i0',
+      location: { x: 0, y: 0 },
+      directions: [
+        { assignments: ['i', 'i', 'b', 'l', 'ls', 'sr'], length: 5 },
+        { assignments: ['i', 'i', 'b', 'ls', 'sr'], length: 5 },
+        { assignments: ['i', 'i', 'b', 'l', 'ls', 'sr'], length: 5 },
+        { assignments: ['i', 'i', 'b', 'ls', 'sr'], length: 5 },
+      ],
+    },
+    // {
+    //   type: 'road',
+    //   id: 'r0', // (check note on intersections)
+    //   start: { location: { x: 0, y: 0 }, assignments: ['...'] },
+    //   end: { location: { x: 0, y: 0 }, assignments: ['...'] },
+    // },
+  ],
+}
 
 function App() {
   const [width, height] = useWindowSize()
   const canvasRef = useRef(null)
   const stepsPerSec = 60
-  const distancePerSec = 5
-  const chalk = useRef(new Chalk(distancePerSec / stepsPerSec))
+  const distancePerSec = 10
+  const configToChalk = convertConfigToChalk(configuration)
+  const chalk = useRef(
+    new Chalk({
+      distancePerStep: distancePerSec / stepsPerSec,
+      pathGroups: configToChalk.pathGroups,
+      spawningPathIds: configToChalk.spawningPathIds,
+    })
+  )
 
-  const configuration = [
-    {
-      type: 'intersection',
-      id: 'i0', // OR store as { id: 0 } knowing that intersection IDs are preceded with "i"
-      location: { x: 0, y: 0 },
-      east: { assignments: ['...'], length: 10 },
-      north: { assignments: ['...'], length: 10 },
-      west: { assignments: ['...'], length: 10 },
-      south: { assignments: ['...'], length: 10 },
-    },
-    {
-      type: 'road',
-      id: 'r0', // (check note on intersections)
-      start: { location: { x: 0, y: 0 }, assignments: ['...'] },
-      end: { location: { x: 0, y: 0 }, assignments: ['...'] },
-    },
-    { type: 'spawn', roadId: 'r0s' }, // Road 0 start
-    { type: 'spawn', roadId: 'i0w' }, // Intersection 0 west
-  ]
-
-  // i1w - gen
-  // i1n - gen
-  // i1e - gen
-  // i1s - conn i2n
-  // i2w - gen
-  // i2n - conn i1s
-  // i2r - gen
-  // i2s - gen
-
-  // Control intersection lane config
-  // Control each intersection direction length
-  // Connect intersections just by placement
   // Place roads between intersections
   //  - FUTURE: Merging?
-  // Spawn point intersections (not sure what I meant by "intersection" here)
 
   // Assignments read left to right
   // Extra lanes have input and output assignments, looking from input to output, read left to right

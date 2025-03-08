@@ -3,7 +3,7 @@ import { Point } from './chalk/types'
 import { convertPathToScreenPosition } from './chalk/utils'
 import { getCarPos } from './functions'
 
-export const pixelsPerSimUnit = 25
+export const pixelsPerSimUnit = 15
 const simToScreen = (point: Point) => {
   const centerX = (window.innerWidth - 300) / 2
   const centerY = window.innerHeight / 2
