@@ -2,15 +2,17 @@ import { Chalk } from './chalk'
 import { Point } from './chalk/types'
 import { convertPathToScreenPosition } from './chalk/utils'
 import { getCarPos } from './functions'
+import { Configuration } from './types'
+import { getIntersectionLaneStartPoint } from './utils'
 
-export const pixelsPerSimUnit = 15
+export const pixelsPerSimUnit = 20
 const simToScreen = (point: Point) => {
   const centerX = (window.innerWidth - 300) / 2
   const centerY = window.innerHeight / 2
   return { x: centerX + point.x * pixelsPerSimUnit, y: centerY + -point.y * pixelsPerSimUnit }
 }
 
-export function render(canvas: HTMLCanvasElement, chalk: Chalk) {
+export function render(canvas: HTMLCanvasElement, configuration: Configuration, chalk: Chalk) {
   console.log('Rendering...')
   const context = canvas?.getContext('2d')
   if (!context) return
@@ -22,10 +24,139 @@ export function render(canvas: HTMLCanvasElement, chalk: Chalk) {
   context.beginPath()
   context.clearRect(0, 0, canvas.width, canvas.height)
 
+  // Render objects
+  configuration.objects.forEach((object) => {
+    if (object.type === 'intersection') {
+      // Render asphalt
+      const centerHeight = object.directions[0].assignments.length * configuration.distanceBetweenLanes
+      const centerWidth = object.directions[1].assignments.length * configuration.distanceBetweenLanes
+      const verticalLength =
+        object.directions[1].length + object.directions[3].length + configuration.distanceBetweenLanes + centerHeight
+      const horizontalLength =
+        object.directions[0].length + object.directions[2].length + configuration.distanceBetweenLanes + centerWidth
+      const horizontalTopLeftAnchor = simToScreen({
+        x: centerWidth / -2 - object.directions[2].length + object.location.x - configuration.distanceBetweenLanes / 2,
+        y: centerHeight / 2 + object.location.y,
+      })
+      const verticalTopLeftAnchor = simToScreen({
+        x: centerWidth / -2 + object.location.x,
+        y: centerHeight / 2 + object.directions[1].length + object.location.y + configuration.distanceBetweenLanes / 2,
+      })
+      context.fillStyle = 'hsl(220deg 5% 12%)'
+      context.beginPath()
+      context.rect(
+        horizontalTopLeftAnchor.x,
+        horizontalTopLeftAnchor.y,
+        horizontalLength * pixelsPerSimUnit,
+        centerHeight * pixelsPerSimUnit
+      )
+      context.rect(
+        verticalTopLeftAnchor.x,
+        verticalTopLeftAnchor.y,
+        centerWidth * pixelsPerSimUnit,
+        verticalLength * pixelsPerSimUnit
+      )
+      context.fill()
+
+      // Render lines
+      const markingThickness = 0.25
+      context.fillStyle = 'white'
+      object.directions.forEach((direction, directionIndex) => {
+        // if (directionIndex !== 3) return
+        const isHorizontal = directionIndex % 2 === 0
+        const width = isHorizontal ? markingThickness * pixelsPerSimUnit : centerWidth * pixelsPerSimUnit
+        const height = isHorizontal ? centerHeight * pixelsPerSimUnit : markingThickness * pixelsPerSimUnit
+        const topLeftAnchor = simToScreen({
+          x: directionIndex === 0 ? centerWidth / 2 - markingThickness : -centerWidth / 2,
+          y: directionIndex !== 3 ? centerHeight / 2 : -centerHeight / 2 + markingThickness,
+        })
+
+        context.fillStyle = 'white'
+        context.beginPath()
+        context.rect(topLeftAnchor.x, topLeftAnchor.y, width, height)
+        context.fill()
+
+        direction.assignments.forEach((assignment, assignmentIndex) => {
+          // Render barrier (if necessary)
+          if (assignment === 'b') {
+            const parellelLength = (direction.length + configuration.distanceBetweenLanes / 2) * pixelsPerSimUnit
+            const perpendicularLength = configuration.distanceBetweenLanes * pixelsPerSimUnit
+            const increment =
+              (directionIndex === 1 ? centerWidth : directionIndex === 2 ? centerHeight : 0) +
+              (directionIndex === 1 || directionIndex === 2 ? -1 : 1) *
+                (assignmentIndex + (directionIndex === 1 || directionIndex === 2 ? 1 : 0)) *
+                configuration.distanceBetweenLanes
+            const topLeftAnchor = simToScreen({
+              // x: -centerWidth / 2 + assignmentIndex * configuration.distanceBetweenLanes,
+              // y: -centerHeight / 2,
+              x: (centerWidth / 2) * (directionIndex === 0 ? 1 : -1) + (isHorizontal ? 0 : increment),
+              y: (centerHeight / 2) * (directionIndex === 1 ? 1 : -1) + (isHorizontal ? increment : 0),
+            })
+            context.fillStyle = '#888'
+            context.beginPath()
+            context.rect(
+              topLeftAnchor.x,
+              topLeftAnchor.y,
+              // perpendicularLength,
+              // parellelLength
+              (isHorizontal ? parellelLength : perpendicularLength) * (directionIndex === 2 ? -1 : 1),
+              (isHorizontal ? perpendicularLength : parellelLength) * (directionIndex !== 3 ? -1 : 1)
+            )
+            context.fill()
+          }
+
+          // Skip first lane
+          if (assignmentIndex === 0) return
+
+          // Render lines in-between lanes
+          // TODO - Try to refine these calculations
+          const prevAssignment = direction.assignments[assignmentIndex - 1]
+          const increment =
+            (directionIndex === 1 ? centerWidth : directionIndex === 2 ? centerHeight : 0) +
+            (directionIndex === 1 || directionIndex === 2 ? -1 : 1) *
+              assignmentIndex *
+              configuration.distanceBetweenLanes -
+            markingThickness / 2
+          const parellelLength = (direction.length + configuration.distanceBetweenLanes / 2) * pixelsPerSimUnit
+          const perpendicularLength = markingThickness * pixelsPerSimUnit
+          const topLeftAnchor = simToScreen({
+            x: (centerWidth / 2) * (directionIndex === 0 ? 1 : -1) + (isHorizontal ? 0 : increment),
+            y: (centerHeight / 2) * (directionIndex === 1 ? 1 : -1) + (isHorizontal ? increment : 0),
+          })
+          const width = (isHorizontal ? parellelLength : perpendicularLength) * (directionIndex === 2 ? -1 : 1)
+          const height = (isHorizontal ? perpendicularLength : parellelLength) * (directionIndex !== 3 ? -1 : 1)
+
+          // Solid
+          // | prev i & curr not i
+          // | prev b & curr not b
+          // | prev not i & curr b
+          // -> Yellow
+          //    | prev i
+          //    | prev b & curr not i
+          // Dotted
+          // [else]
+
+          // Additional turn line
+          // | prev not i & prev not b & prev not s
+          // | curr not i & curr not b & curr not s
+
+          context.fillStyle = 'white'
+          context.beginPath()
+          context.rect(topLeftAnchor.x, topLeftAnchor.y, width, height)
+          context.fill()
+        })
+      })
+    } else if (object.type === 'road') {
+      // ...
+    }
+  })
+
+  // -- DEBUG RENDERING --
+
   // Render paths
   const pathGroups = chalk.getPathGroups()
   const allPathSegments = pathGroups.flatMap((group) => group.flatMap((path) => path.segments))
-  context.strokeStyle = 'black'
+  context.strokeStyle = 'hsl(220deg 5% 20%)'
   context.lineWidth = pixelsPerSimUnit / 2
   allPathSegments.forEach((segment) => {
     if (segment.length === 2) {

@@ -7,17 +7,17 @@ import { Configuration } from './types'
 import { convertConfigToChalk } from './utils'
 
 const configuration: Configuration = {
-  distanceBetweenLanes: 2,
+  distanceBetweenLanes: 1.5,
   objects: [
     {
       type: 'intersection',
       id: 'i0',
       location: { x: 0, y: 0 },
       directions: [
-        { assignments: ['i', 'i', 'b', 'l', 'ls', 'sr'], length: 5 },
-        { assignments: ['i', 'i', 'b', 'ls', 'sr'], length: 5 },
-        { assignments: ['i', 'i', 'b', 'l', 'ls', 'sr'], length: 5 },
-        { assignments: ['i', 'i', 'b', 'ls', 'sr'], length: 5 },
+        { assignments: ['i', 'i', 'i', 'l', 'l', 's', 's', 's', 'r'], length: 5 },
+        { assignments: ['b', 'i', 'l', 'l', 's', 's', 'r'], length: 10 },
+        { assignments: ['b', 'i', 'i', 'i', 'b', 'l', 's', 's', 'sr'], length: 5 },
+        { assignments: ['b', 'i', 'i', 'l', 'l', 's', 'r'], length: 10 },
       ],
     },
     // {
@@ -32,16 +32,10 @@ const configuration: Configuration = {
 function App() {
   const [width, height] = useWindowSize()
   const canvasRef = useRef(null)
-  const stepsPerSec = 60
-  const distancePerSec = 10
+  const stepsPerSec = 10
+  const distancePerSec = 5
   const configToChalk = convertConfigToChalk(configuration)
-  const chalk = useRef(
-    new Chalk({
-      distancePerStep: distancePerSec / stepsPerSec,
-      pathGroups: configToChalk.pathGroups,
-      spawningPathIds: configToChalk.spawningPathIds,
-    })
-  )
+  const chalk = useRef<Chalk>(null)
 
   // Place roads between intersections
   //  - FUTURE: Merging?
@@ -53,10 +47,18 @@ function App() {
   useEffect(() => {
     const loop = setInterval(() => {
       chalk.current.step()
-      render(canvasRef.current, chalk.current)
+      render(canvasRef.current, configuration, chalk.current)
     }, 1000 / stepsPerSec)
     return () => clearInterval(loop)
   })
+
+  useEffect(() => {
+    chalk.current = new Chalk({
+      distancePerStep: distancePerSec / stepsPerSec,
+      pathGroups: configToChalk.pathGroups,
+      spawningPathIds: configToChalk.spawningPathIds,
+    })
+  }, [configToChalk])
 
   // ------ Render
   return (

@@ -112,7 +112,7 @@ export function convertConfigToChalk(
   return { pathGroups: [pathGroup], spawningPathIds }
 }
 
-function getIntersectionLaneStartPoint(
+export function getIntersectionLaneStartPoint(
   configuration: Configuration,
   intersectionId: IntersectionObject['id'],
   directionIndex: number,

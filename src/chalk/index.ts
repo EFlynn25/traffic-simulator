@@ -51,7 +51,7 @@ export class Chalk {
   step() {
     // Step entities
     this.entities = this.entities.filter((entity) => entity.step(this.entities))
-    if (this.entities.length < 20) {
+    if (this.entities.length < 30) {
       const startGroupId = this.spawningPathIds[Math.floor(Math.random() * this.spawningPathIds.length)]
       if (startGroupId)
         this.entities.push(
