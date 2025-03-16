@@ -59,12 +59,11 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
       context.fill()
 
       // Render lines
-      const markingThickness = 0.25
+      const markingThickness = 0.2
       context.fillStyle = 'white'
       object.directions.forEach((direction, directionIndex) => {
         const isHorizontal = directionIndex % 2 === 0
-        const length = (isHorizontal ? centerHeight : centerWidth)
-        const thickness = markingThickness
+        const length = isHorizontal ? centerHeight : centerWidth
 
         renderMarking({
           context,
@@ -73,7 +72,7 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
           directionIndex,
           parallelAddition: -markingThickness,
           perpendicularAddition: 0,
-          parallelLength: thickness,
+          parallelLength: markingThickness,
           perpendicularLength: length,
         })
 
@@ -81,7 +80,7 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
           // Render barrier (if necessary)
           if (assignment === 'b') {
             const increment = assignmentIndex * configuration.distanceBetweenLanes
-            const length = (direction.length + configuration.distanceBetweenLanes / 2)
+            const length = direction.length + configuration.distanceBetweenLanes / 2
             const thickness = configuration.distanceBetweenLanes
 
             renderMarking({
@@ -103,8 +102,6 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
           const prevAssignment = direction.assignments[assignmentIndex - 1]
 
           const perpendicularAddition = assignmentIndex * configuration.distanceBetweenLanes - markingThickness / 2
-          const length = (direction.length + configuration.distanceBetweenLanes / 2)
-          const thickness = markingThickness
 
           // Solid
           // | prev i & curr not i
@@ -120,15 +117,54 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
           // | prev not i & prev not b & prev not s
           // | curr not i & curr not b & curr not s
 
-          renderMarking({
-            context,
-            configuration,
-            intersectionId: object.id,
-            directionIndex,
-            parallelLength: length,
-            perpendicularLength: thickness,
-            perpendicularAddition,
-          })
+          if (
+            (prevAssignment === 'i' && assignment !== 'i') ||
+            (prevAssignment === 'b' && assignment !== 'b') ||
+            (prevAssignment !== 'i' && assignment === 'b')
+          ) {
+            // Solid line
+            const isYellow = prevAssignment === 'i' || (prevAssignment === 'b' && assignment !== 'i')
+            renderMarking({
+              context,
+              configuration,
+              intersectionId: object.id,
+              directionIndex,
+              parallelLength: direction.length + configuration.distanceBetweenLanes / 2,
+              perpendicularLength: markingThickness,
+              perpendicularAddition,
+              color: isYellow ? 'hsl(50deg 70% 65%)' : 'white',
+            })
+          } else {
+            // Dotted line
+            for (let i = 0; i < direction.length / 2; i++) {
+              renderMarking({
+                context,
+                configuration,
+                intersectionId: object.id,
+                directionIndex,
+                parallelLength: Math.min(1, direction.length - i * 2 - 0.25),
+                perpendicularLength: markingThickness,
+                parallelAddition: i * 2 + 1,
+                perpendicularAddition,
+              })
+            }
+
+            // Additional turn line
+            if (
+              (prevAssignment !== 'i' && prevAssignment !== 'b' && !prevAssignment.includes('s')) ||
+              (assignment !== 'i' && assignment !== 'b' && !assignment.includes('s'))
+            ) {
+              renderMarking({
+                context,
+                configuration,
+                intersectionId: object.id,
+                directionIndex,
+                parallelLength: 3,
+                perpendicularLength: markingThickness,
+                perpendicularAddition,
+              })
+            }
+          }
         })
       })
     } else if (object.type === 'road') {
@@ -151,7 +187,7 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
       context.beginPath()
       context.moveTo(firstScreenPos.x, firstScreenPos.y)
       context.lineTo(lastScreenPos.x, lastScreenPos.y)
-      context.stroke()
+      // context.stroke()
     } else {
       // Bezier curve
       const firstScreenPos = simToScreen(segment[0])
@@ -160,7 +196,7 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
       context.beginPath()
       context.moveTo(firstScreenPos.x, firstScreenPos.y)
       context.quadraticCurveTo(controlScreenPos.x, controlScreenPos.y, lastScreenPos.x, lastScreenPos.y)
-      context.stroke()
+      // context.stroke()
     }
   })
 

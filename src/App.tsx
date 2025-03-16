@@ -14,10 +14,10 @@ const configuration: Configuration = {
       id: 'i0',
       location: { x: 0, y: 0 },
       directions: [
-        { assignments: ['i', 'i', 'i', 'l', 'l', 's', 's', 's', 'r'], length: 5 },
-        { assignments: ['b', 'i', 'l', 'l', 's', 's', 'r'], length: 10 },
-        { assignments: ['b', 'i', 'i', 'i', 'b', 'l', 's', 's', 'sr'], length: 5 },
-        { assignments: ['b', 'i', 'i', 'l', 'l', 's', 'r'], length: 10 },
+        { assignments: ['i', 'i', 'i', 'l', 'l', 's', 's', 's', 'r'], length: 7 },
+        { assignments: ['b', 'i', 'l', 'l', 's', 's', 'r'], length: 12 },
+        { assignments: ['b', 'i', 'i', 'i', 'b', 'l', 's', 's', 'sr'], length: 7 },
+        { assignments: ['b', 'i', 'i', 'l', 'l', 's', 'r'], length: 12 },
       ],
     },
     // {
@@ -32,8 +32,8 @@ const configuration: Configuration = {
 function App() {
   const [width, height] = useWindowSize()
   const canvasRef = useRef(null)
-  const stepsPerSec = 10
-  const distancePerSec = 5
+  const stepsPerSec = 60
+  const distancePerSec = 20
   const configToChalk = convertConfigToChalk(configuration)
   const chalk = useRef<Chalk>(null)
 
