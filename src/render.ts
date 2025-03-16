@@ -2,7 +2,7 @@ import { Chalk } from './chalk'
 import { Point } from './chalk/types'
 import { convertPathToScreenPosition } from './chalk/utils'
 import { getCarPos } from './functions'
-import { Configuration } from './types'
+import { Configuration, IntersectionObject } from './types'
 import { getIntersectionLaneStartPoint } from './utils'
 
 export const pixelsPerSimUnit = 20
@@ -62,69 +62,49 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
       const markingThickness = 0.25
       context.fillStyle = 'white'
       object.directions.forEach((direction, directionIndex) => {
-        // if (directionIndex !== 3) return
         const isHorizontal = directionIndex % 2 === 0
-        const width = isHorizontal ? markingThickness * pixelsPerSimUnit : centerWidth * pixelsPerSimUnit
-        const height = isHorizontal ? centerHeight * pixelsPerSimUnit : markingThickness * pixelsPerSimUnit
-        const topLeftAnchor = simToScreen({
-          x: directionIndex === 0 ? centerWidth / 2 - markingThickness : -centerWidth / 2,
-          y: directionIndex !== 3 ? centerHeight / 2 : -centerHeight / 2 + markingThickness,
-        })
+        const length = (isHorizontal ? centerHeight : centerWidth)
+        const thickness = markingThickness
 
-        context.fillStyle = 'white'
-        context.beginPath()
-        context.rect(topLeftAnchor.x, topLeftAnchor.y, width, height)
-        context.fill()
+        renderMarking({
+          context,
+          configuration,
+          intersectionId: object.id,
+          directionIndex,
+          parallelAddition: -markingThickness,
+          perpendicularAddition: 0,
+          parallelLength: thickness,
+          perpendicularLength: length,
+        })
 
         direction.assignments.forEach((assignment, assignmentIndex) => {
           // Render barrier (if necessary)
           if (assignment === 'b') {
-            const parellelLength = (direction.length + configuration.distanceBetweenLanes / 2) * pixelsPerSimUnit
-            const perpendicularLength = configuration.distanceBetweenLanes * pixelsPerSimUnit
-            const increment =
-              (directionIndex === 1 ? centerWidth : directionIndex === 2 ? centerHeight : 0) +
-              (directionIndex === 1 || directionIndex === 2 ? -1 : 1) *
-                (assignmentIndex + (directionIndex === 1 || directionIndex === 2 ? 1 : 0)) *
-                configuration.distanceBetweenLanes
-            const topLeftAnchor = simToScreen({
-              // x: -centerWidth / 2 + assignmentIndex * configuration.distanceBetweenLanes,
-              // y: -centerHeight / 2,
-              x: (centerWidth / 2) * (directionIndex === 0 ? 1 : -1) + (isHorizontal ? 0 : increment),
-              y: (centerHeight / 2) * (directionIndex === 1 ? 1 : -1) + (isHorizontal ? increment : 0),
+            const increment = assignmentIndex * configuration.distanceBetweenLanes
+            const length = (direction.length + configuration.distanceBetweenLanes / 2)
+            const thickness = configuration.distanceBetweenLanes
+
+            renderMarking({
+              context,
+              configuration,
+              intersectionId: object.id,
+              directionIndex,
+              parallelLength: length,
+              perpendicularLength: thickness,
+              perpendicularAddition: increment,
+              color: '#888',
             })
-            context.fillStyle = '#888'
-            context.beginPath()
-            context.rect(
-              topLeftAnchor.x,
-              topLeftAnchor.y,
-              // perpendicularLength,
-              // parellelLength
-              (isHorizontal ? parellelLength : perpendicularLength) * (directionIndex === 2 ? -1 : 1),
-              (isHorizontal ? perpendicularLength : parellelLength) * (directionIndex !== 3 ? -1 : 1)
-            )
-            context.fill()
           }
 
           // Skip first lane
           if (assignmentIndex === 0) return
 
           // Render lines in-between lanes
-          // TODO - Try to refine these calculations
           const prevAssignment = direction.assignments[assignmentIndex - 1]
-          const increment =
-            (directionIndex === 1 ? centerWidth : directionIndex === 2 ? centerHeight : 0) +
-            (directionIndex === 1 || directionIndex === 2 ? -1 : 1) *
-              assignmentIndex *
-              configuration.distanceBetweenLanes -
-            markingThickness / 2
-          const parellelLength = (direction.length + configuration.distanceBetweenLanes / 2) * pixelsPerSimUnit
-          const perpendicularLength = markingThickness * pixelsPerSimUnit
-          const topLeftAnchor = simToScreen({
-            x: (centerWidth / 2) * (directionIndex === 0 ? 1 : -1) + (isHorizontal ? 0 : increment),
-            y: (centerHeight / 2) * (directionIndex === 1 ? 1 : -1) + (isHorizontal ? increment : 0),
-          })
-          const width = (isHorizontal ? parellelLength : perpendicularLength) * (directionIndex === 2 ? -1 : 1)
-          const height = (isHorizontal ? perpendicularLength : parellelLength) * (directionIndex !== 3 ? -1 : 1)
+
+          const perpendicularAddition = assignmentIndex * configuration.distanceBetweenLanes - markingThickness / 2
+          const length = (direction.length + configuration.distanceBetweenLanes / 2)
+          const thickness = markingThickness
 
           // Solid
           // | prev i & curr not i
@@ -140,10 +120,15 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
           // | prev not i & prev not b & prev not s
           // | curr not i & curr not b & curr not s
 
-          context.fillStyle = 'white'
-          context.beginPath()
-          context.rect(topLeftAnchor.x, topLeftAnchor.y, width, height)
-          context.fill()
+          renderMarking({
+            context,
+            configuration,
+            intersectionId: object.id,
+            directionIndex,
+            parallelLength: length,
+            perpendicularLength: thickness,
+            perpendicularAddition,
+          })
         })
       })
     } else if (object.type === 'road') {
@@ -213,6 +198,64 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
 
   // Reset canvas scaling
   context.scale(1 / window.devicePixelRatio, 1 / window.devicePixelRatio)
+}
+
+function renderMarking({
+  context,
+  configuration,
+  intersectionId,
+  directionIndex,
+  parallelLength,
+  perpendicularLength,
+  parallelAddition = 0,
+  perpendicularAddition = 0,
+  color = 'white',
+}: {
+  context: CanvasRenderingContext2D
+  configuration: Configuration
+  intersectionId: IntersectionObject['id']
+  directionIndex: number
+  parallelLength: number
+  perpendicularLength: number
+  parallelAddition?: number
+  perpendicularAddition?: number
+  color?: string
+}) {
+  const intersection = configuration.objects.find((object) => object.id === intersectionId)
+  if (intersection.type !== 'intersection') return
+
+  const centerHeight = intersection.directions[0].assignments.length * configuration.distanceBetweenLanes
+  const centerWidth = intersection.directions[1].assignments.length * configuration.distanceBetweenLanes
+  const isHorizontal = directionIndex % 2 === 0
+  const directionAnchorPoint = {
+    x: (centerWidth / 2) * (directionIndex === 2 || directionIndex === 3 ? -1 : 1) + intersection.location.x,
+    y: (centerHeight / 2) * (directionIndex === 0 || directionIndex === 3 ? -1 : 1) + intersection.location.y,
+  }
+  const markingAnchor = simToScreen({
+    x:
+      directionAnchorPoint.x +
+      (isHorizontal
+        ? parallelAddition * (directionIndex === 2 ? -1 : 1)
+        : perpendicularAddition * (directionIndex === 1 ? -1 : 1)),
+    y:
+      directionAnchorPoint.y +
+      (isHorizontal
+        ? perpendicularAddition * (directionIndex === 2 ? -1 : 1)
+        : parallelAddition * (directionIndex === 3 ? -1 : 1)),
+  })
+  const width =
+    (isHorizontal ? parallelLength : perpendicularLength) *
+    (directionIndex === 1 || directionIndex === 2 ? -1 : 1) *
+    pixelsPerSimUnit
+  const height =
+    (isHorizontal ? perpendicularLength : parallelLength) *
+    (directionIndex === 0 || directionIndex === 1 ? -1 : 1) *
+    pixelsPerSimUnit
+
+  context.fillStyle = color
+  context.beginPath()
+  context.rect(markingAnchor.x, markingAnchor.y, width, height)
+  context.fill()
 }
 
 // Simulation coordinate scale... 1 V lane per x, and 1 H lane per y
