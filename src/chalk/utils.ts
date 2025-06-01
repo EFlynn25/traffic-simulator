@@ -43,7 +43,7 @@ export function convertPathToScreenPosition(pathPosition: number, path: Path): P
   let currentSegmentLength: number | undefined
   for (let i = 0; i < segmentLengths.length; i++) {
     const segmentLength = segmentLengths[i]
-    if (currentSegmentPosition > segmentLength) {
+    if (Math.round(currentSegmentPosition) > Math.round(segmentLength)) {
       currentSegmentPosition -= segmentLength
     } else {
       currentSegment = currentSegments[i]

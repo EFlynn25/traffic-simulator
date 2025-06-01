@@ -51,7 +51,7 @@ export class Chalk {
   step() {
     // Step entities
     this.entities = this.entities.filter((entity) => entity.step(this.entities))
-    if (this.entities.length < 30) {
+    if (this.entities.length < 50 && Math.random() > 0.7) {
       const startGroupId = this.spawningPathIds[Math.floor(Math.random() * this.spawningPathIds.length)]
       if (startGroupId)
         this.entities.push(
@@ -73,7 +73,7 @@ export class Chalk {
     const resetClock = 10 / this.distancePerStep
     if (this.clock <= 0) {
       this.clock = resetClock + 1
-      const nextLocations = this.queue.filter((locationId) => locationId[0] === this.queue[0][0])
+      const nextLocations = this.queue.filter((locationId) => locationId[2] === this.queue[0][2])
       nextLocations.map((locationId) => this.getLocation(locationId)?.setState('go', true))
       this.queue = this.queue.filter((locationId) => !nextLocations.includes(locationId))
     } else {

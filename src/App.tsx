@@ -12,14 +12,36 @@ const configuration: Configuration = {
     {
       type: 'intersection',
       id: 'i0',
-      location: { x: 0, y: 0 },
+      location: { x: 0, y: 9 },
       directions: [
-        { assignments: ['i', 'i', 'i', 'l', 'l', 's', 's', 's', 'r'], length: 7 },
-        { assignments: ['b', 'i', 'l', 'l', 's', 's', 'r'], length: 12 },
-        { assignments: ['b', 'i', 'i', 'i', 'b', 'l', 's', 's', 'sr'], length: 7 },
-        { assignments: ['b', 'i', 'i', 'l', 'l', 's', 'r'], length: 12 },
+        { assignments: ['i', 'i', 'i', 'l', 'l', 's', 's', 's', 'r'], length: 25 },
+        { assignments: ['b', 'i', 'l', 'l', 's', 's', 'r'], length: 10 },
+        { assignments: ['b', 'i', 'i', 'i', 'b', 'l', 's', 's', 'sr'], length: 25 },
+        { assignments: ['b', 'i', 'i', 'l', 'l', 's', 'r'], length: 7 },
       ],
     },
+    {
+      type: 'intersection',
+      id: 'i1',
+      location: { x: 0, y: -14.75 },
+      directions: [
+        { assignments: ['i', 'lsr'], length: 25 },
+        { assignments: ['i', 'i', 'i', 'i', 'ls', 'sr', 'b'], length: 7 },
+        { assignments: ['i', 'lsr'], length: 25 },
+        { assignments: ['b', 'i', 'i', 'ls', 's', 's', 'sr'], length: 10 },
+      ],
+    },
+    // {
+    //   type: 'intersection',
+    //   id: 'i1',
+    //   location: { x: 0, y: 20 },
+    //   directions: [
+    //     { assignments: ['i', 's'], length: 5 },
+    //     { assignments: ['i', 'i', 'i', 'i', 's', 's', 'b'], length: 5 },
+    //     { assignments: ['i', 's'], length: 5 },
+    //     { assignments: ['b', 'i', 'i', 's', 's', 's', 's'], length: 5 },
+    //   ],
+    // },
     // {
     //   type: 'road',
     //   id: 'r0', // (check note on intersections)
@@ -69,6 +91,9 @@ function App() {
         width={Math.floor((width - 300) * window.devicePixelRatio)}
         height={Math.floor(height * window.devicePixelRatio)}
       />
+      <div className='sidePanel'>
+        <h1>Options</h1>
+      </div>
     </div>
   )
 

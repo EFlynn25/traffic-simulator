@@ -1,6 +1,6 @@
 import { ChalkProps } from './chalk'
 import { Location } from './chalk/location'
-import { PathGroup, Point } from './chalk/types'
+import { Point } from './chalk/types'
 import { Configuration, IntersectionObject } from './types'
 
 // export function verifyConfig...?
@@ -12,7 +12,7 @@ import { Configuration, IntersectionObject } from './types'
 // b must correspond to opposite direction b or l/r
 // l or r count must be greater than or equal to i count on final lane
 
-const directionIds = ['e', 'n', 'w', 's'] as const
+export const directionIds = ['e', 'n', 'w', 's'] as const
 
 export function convertConfigToChalk(
   configuration: Configuration
@@ -60,13 +60,13 @@ export function convertConfigToChalk(
           pathGroup.push({
             id,
             segments: [[initialStartPoint, initialEndPoint]],
-            locations: assignment !== 'i' ? [new Location(`${directionIndex}${id}`, direction.length, 1)] : [],
+            locations: assignment !== 'i' ? [new Location(id, direction.length, 1)] : [],
           })
 
           // Through path
           if (assignment !== 'i') {
             assignment.split('').forEach((route: 'l' | 's' | 'r') => {
-              const finalPaths = getFinalPaths('i0', directionIndex, i, route, configuration)
+              const finalPaths = getFinalPaths(object.id, directionIndex, i, route, configuration)
               const finalStartPoint = getIntersectionLaneStartPoint(
                 configuration,
                 object.id,

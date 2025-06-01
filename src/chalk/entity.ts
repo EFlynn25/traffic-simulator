@@ -131,9 +131,9 @@ export class Entity {
       this.getNextStep(this.distanceBetweenEntities),
       this.getNextStep(this.distanceBetweenEntities * 2),
     ]
-    const myNext2Positions = myNext2Steps.map((step) =>
-      step === false ? false : this.getScreenPosition(step.pathPosition, step.pathId)
-    )
+    const myNext2Positions = myNext2Steps
+      .map((step) => (step === false ? false : this.getScreenPosition(step.pathPosition, step.pathId)))
+      .filter((myPos) => myPos !== false)
     const otherEntities = entities.filter((entity) => entity !== this && entity.getPath().id !== this.getPath().id)
     for (let i = 0; i < otherEntities.length; i++) {
       const entity = otherEntities[i]
@@ -145,20 +145,17 @@ export class Entity {
         entity.getNextStep(this.distanceBetweenEntities),
         entity.getNextStep(this.distanceBetweenEntities * 2),
       ]
-      const entityNext2Positions = entityNext2Steps.map((step) =>
-        step === false ? false : entity.getScreenPosition(step.pathPosition, step.pathId)
-      )
+      const entityNext2Positions = entityNext2Steps
+        .map((step) => (step === false ? false : entity.getScreenPosition(step.pathPosition, step.pathId)))
+        .filter((myPos) => myPos !== false)
 
       // Calculate the distances between the positions of my next 2 steps and their 2 steps
       const distances = myNext2Positions
-        .filter((myPos) => myPos !== false)
         .flatMap((myPos) =>
-          entityNext2Positions
-            .filter((myPos) => myPos !== false)
-            .map((theirPos) => ({
-              distance: calculateDistanceBetweenPoints(myPos, theirPos),
-              positions: [myPos, theirPos],
-            }))
+          entityNext2Positions.map((theirPos) => ({
+            distance: calculateDistanceBetweenPoints(myPos, theirPos),
+            positions: [myPos, theirPos],
+          }))
         )
         .filter((distance) => distance.distance < this.distanceBetweenEntities)
         .sort((a, b) => a.distance - b.distance)

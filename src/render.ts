@@ -3,9 +3,9 @@ import { Point } from './chalk/types'
 import { convertPathToScreenPosition } from './chalk/utils'
 import { getCarPos } from './functions'
 import { Configuration, IntersectionObject } from './types'
-import { getIntersectionLaneStartPoint } from './utils'
+import { directionIds } from './utils'
 
-export const pixelsPerSimUnit = 20
+export const pixelsPerSimUnit = 15
 const simToScreen = (point: Point) => {
   const centerX = (window.innerWidth - 300) / 2
   const centerY = window.innerHeight / 2
@@ -23,6 +23,13 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
   // Clear canvas
   context.beginPath()
   context.clearRect(0, 0, canvas.width, canvas.height)
+
+  // Render title and stats
+  context.fillStyle = 'white'
+  context.font = 'bold 16px Montserrat'
+  context.textBaseline = 'top'
+  context.fillText('Flynn Traffic Simulator', 10, 10)
+  context.fillText('Cars: ' + chalk.getEntities().length.toString(), 10, 30)
 
   // Render objects
   configuration.objects.forEach((object) => {
@@ -70,8 +77,6 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
           configuration,
           intersectionId: object.id,
           directionIndex,
-          parallelAddition: -markingThickness,
-          perpendicularAddition: 0,
           parallelLength: markingThickness,
           perpendicularLength: length,
         })
@@ -88,8 +93,9 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
               configuration,
               intersectionId: object.id,
               directionIndex,
-              parallelLength: length,
+              parallelLength: length - markingThickness,
               perpendicularLength: thickness,
+              parallelAddition: markingThickness,
               perpendicularAddition: increment,
               color: '#888',
             })
@@ -100,27 +106,12 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
 
           // Render lines in-between lanes
           const prevAssignment = direction.assignments[assignmentIndex - 1]
-
           const perpendicularAddition = assignmentIndex * configuration.distanceBetweenLanes - markingThickness / 2
-
-          // Solid
-          // | prev i & curr not i
-          // | prev b & curr not b
-          // | prev not i & curr b
-          // -> Yellow
-          //    | prev i
-          //    | prev b & curr not i
-          // Dotted
-          // [else]
-
-          // Additional turn line
-          // | prev not i & prev not b & prev not s
-          // | curr not i & curr not b & curr not s
 
           if (
             (prevAssignment === 'i' && assignment !== 'i') ||
             (prevAssignment === 'b' && assignment !== 'b') ||
-            (prevAssignment !== 'i' && assignment === 'b')
+            (prevAssignment !== 'i' && prevAssignment !== 'b' && assignment === 'b')
           ) {
             // Solid line
             const isYellow = prevAssignment === 'i' || (prevAssignment === 'b' && assignment !== 'i')
@@ -129,22 +120,26 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
               configuration,
               intersectionId: object.id,
               directionIndex,
-              parallelLength: direction.length + configuration.distanceBetweenLanes / 2,
+              parallelLength: direction.length + configuration.distanceBetweenLanes / 2 - markingThickness,
               perpendicularLength: markingThickness,
+              parallelAddition: markingThickness,
               perpendicularAddition,
               color: isYellow ? 'hsl(50deg 70% 65%)' : 'white',
             })
-          } else {
+          } else if (assignment !== 'b') {
             // Dotted line
-            for (let i = 0; i < direction.length / 2; i++) {
+            const directionLength = direction.length + configuration.distanceBetweenLanes / 2 - markingThickness
+            const length = 0.8
+            for (let i = 0; i < (directionLength - length) / (length * 2); i++) {
+              const parallelAddition = i * length * 2 + length
               renderMarking({
                 context,
                 configuration,
                 intersectionId: object.id,
                 directionIndex,
-                parallelLength: Math.min(1, direction.length - i * 2 - 0.25),
+                parallelLength: Math.min(length, directionLength - parallelAddition),
                 perpendicularLength: markingThickness,
-                parallelAddition: i * 2 + 1,
+                parallelAddition: parallelAddition + markingThickness,
                 perpendicularAddition,
               })
             }
@@ -152,18 +147,35 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
             // Additional turn line
             if (
               (prevAssignment !== 'i' && prevAssignment !== 'b' && !prevAssignment.includes('s')) ||
-              (assignment !== 'i' && assignment !== 'b' && !assignment.includes('s'))
+              (assignment !== 'i' && !assignment.includes('s'))
             ) {
               renderMarking({
                 context,
                 configuration,
                 intersectionId: object.id,
                 directionIndex,
-                parallelLength: 3,
+                parallelLength: length * 4,
                 perpendicularLength: markingThickness,
+                parallelAddition: markingThickness,
                 perpendicularAddition,
               })
             }
+          }
+
+          // Render traffic light
+          const locationId = `${object.id}${directionIds[directionIndex]}${assignmentIndex}`
+          const location = chalk.getLocation(locationId)
+          if (location) {
+            renderMarking({
+              context,
+              configuration,
+              intersectionId: object.id,
+              directionIndex,
+              parallelLength: markingThickness,
+              perpendicularLength: configuration.distanceBetweenLanes,
+              perpendicularAddition: assignmentIndex * configuration.distanceBetweenLanes,
+              color: location.getState().go ? 'hsl(100deg 50% 50%)' : 'hsl(0deg 50% 50%)',
+            })
           }
         })
       })
@@ -214,10 +226,10 @@ export function render(canvas: HTMLCanvasElement, configuration: Configuration, 
         context.beginPath()
         context.moveTo(screenPos.x, screenPos.y)
         context.lineTo(screenPosRadius.x, screenPosRadius.y)
-        context.stroke()
+        // context.stroke()
         context.beginPath()
         context.arc(screenPos.x, screenPos.y, pixelsPerSimUnit / 4, 0, 2 * Math.PI)
-        context.fill()
+        // context.fill()
       })
     )
   )
